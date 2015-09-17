@@ -1,5 +1,6 @@
 class Creature {
   public static inline var NUM_GENES: Int = 100;
+  public static inline var MUTATION_PROBA_PERCENT: Int = 5;
   private static var nextId = 0;
   private var genome: Array<Gene>;
   public var x: Float;
@@ -18,8 +19,18 @@ class Creature {
   }
   public static function evolve(creature1: Creature, creature2: Creature): Creature {
     var creature = new Creature();
+    var split = Math.random() * NUM_GENES;
     for(idx in 0...NUM_GENES) {
-      creature.genome[idx] = Gene.evolve(creature1.genome[idx], creature2.genome[idx]);
+      if(idx < split) {
+        creature.genome[idx] = creature1.genome[idx];
+      }
+      else {
+        creature.genome[idx] = creature2.genome[idx];
+      }
+      var randPercent = Math.round(Math.random() * 100);
+      if(randPercent < MUTATION_PROBA_PERCENT) {
+        creature.genome[idx] = Gene.randomize();
+      }
     }
     return creature;
   }
@@ -29,9 +40,8 @@ class Creature {
     reset();
   }
   public function reset() {
-    x = 10 + Math.random() * (Map.WIDTH - 20);
-    y = 10 + Math.random() * (Map.HEIGHT - 20);
-//x = 25; y = 25;
+    x = (Map.WIDTH / 2) + (5 - Math.random() * 10);
+    y = (Map.HEIGHT / 2) + (5 - Math.random() * 10);
     initialX = x;
     initialY = y;
   }

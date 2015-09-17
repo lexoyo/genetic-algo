@@ -49,14 +49,14 @@ class Test {
     var newBatch: Array<Creature> = new Array();
     while(newBatch.length < NUM_CREATURES) {
       for(idx1 in 0...best.length) {
-        for (idx2 in (idx1+1)...best.length) {
+        for (idx2 in 0...best.length) {
+          // TODO: do not include evolve(idx, idx) ?
           newBatch.push(Creature.evolve(best[idx1], best[idx2]));
         }
       }
     }
     var creature = best[0];
-    cpp.Lib.print("\033[2JScore: " + Std.string(teacher.getScore(creature) / NUM_ROUNDS) + "\n" + creature.toString() + "\n" + teacher.getRoute(creature));
-    trace(creature.initialX, creature.initialY);
+    cpp.Lib.print("\033[2JScore: " + Std.string(teacher.getScore(creature)) + "\n" + creature.toString() + "\n" + teacher.getRoute(creature));
     return newBatch;
   }
 }

@@ -1,10 +1,15 @@
 typedef CreatureData = {
   score: Int,
-  route: List<Coord<Int>>
+  minX: Float,
+  minY: Float,
+  maxX: Float,
+  maxY: Float,
+  maxDist: Float,
+  map: Array<Array<Int>>,
 }
 typedef Coord<T> = { var x:T; var y:T; }
 class Teacher {
-  public static inline var MAX_TURNS:Int = 2000;
+  public static inline var MAX_TURNS:Int = 200;
   private var turns:Int = 0;
   private var creaturesData:Array<CreatureData> = null;
 
@@ -13,9 +18,24 @@ class Teacher {
     for(creature in creatures) {
       creaturesData[creature.id] = {
         score: 0,
-        route: new List<Coord<Int>>()
+        minX: 0,
+        minY: 0,
+        maxX: 0,
+        maxY: 0,
+        maxDist: 0,
+        map: createMap(),
       }
     }
+  }
+  public function createMap():Array<Array<Int>> {
+    var empty = new Array();
+    for(x in 0...Map.WIDTH) {
+      empty[x] = new Array();
+      for(y in 0...Map.HEIGHT) {
+        empty[x][y] = 0;
+      }
+    }
+    return empty;
   }
   public function start() {
     turns = 0;
@@ -25,50 +45,65 @@ class Teacher {
     turns ++;
   }
   public function loop(creature:Creature) {
-    if(creature.x <= 0 && creature.y < (Map.HEIGHT/2)+10 && creature.y > (Map.HEIGHT/2)-10) {
-      creaturesData[creature.id].score++;
-    }
     if(turns == 0) {
-      creaturesData[creature.id].route.clear();
+      creaturesData[creature.id].map = createMap();
+      creaturesData[creature.id].minX= 0;
+      creaturesData[creature.id].minY = 0;
+      creaturesData[creature.id].maxX = 0;
+      creaturesData[creature.id].maxY = 0;
+      creaturesData[creature.id].maxDist = 0;
       creature.reset();
     }
-    creaturesData[creature.id].route.add({
-      x: Math.round(creature.x),
-      y: Math.round(creature.y)
-    });
+    // reached target
+    if(creature.x <= 0 && creature.y < (Map.HEIGHT/2)+5 && creature.y > (Map.HEIGHT/2)-5) {
+      creaturesData[creature.id].score += 40;
+    }
+    // gone to a new coord
+    if(creaturesData[creature.id].map[Math.round(creature.x)][Math.round(creature.y)] == 0) {
+      creaturesData[creature.id].score += 0;
+    }
+    creaturesData[creature.id].map[Math.round(creature.x)][Math.round(creature.y)]++;
+    // gone out of the "known" perimeter
+    if(creaturesData[creature.id].minX > creature.x || creaturesData[creature.id].maxX < creature.x ||
+        creaturesData[creature.id].minY > creature.y || creaturesData[creature.id].maxY < creature.y) {
+      creaturesData[creature.id].score += 10;
+    }
+    creaturesData[creature.id].minX = Math.min(creature.x, creaturesData[creature.id].minX);
+    creaturesData[creature.id].minY = Math.min(creature.y, creaturesData[creature.id].minY);
+    creaturesData[creature.id].maxX = Math.max(creature.x, creaturesData[creature.id].maxX);
+    creaturesData[creature.id].maxY = Math.max(creature.y, creaturesData[creature.id].maxY);
+    // gone further
+    var dist = Math.abs(creature.x - creature.initialX) + Math.abs(creature.y - creature.initialY);
+    if(dist > creaturesData[creature.id].maxDist) {
+      creaturesData[creature.id].maxDist = dist;
+      creaturesData[creature.id].score += 0;
+    }
   }
   public function getScore(creature:Creature):Int {
     return creaturesData[creature.id].score;
   }
   public function getRoute(creature:Creature): String {
-    var map = new Array();
+    var res = new Array();
     for(x in 0...Map.WIDTH) {
-      map[x] = new Array();
+      res[x] = new Array();
       for(y in 0...Map.HEIGHT) {
         var obs  = Map.getObstruction(x, y);
-        if(obs == 0) map[x][y] = "_";
-        else map[x][y] = "X";
-        if(x == 0 && y < (Map.HEIGHT/2)+10 && y > (Map.HEIGHT/2)-10) {
-          map[x][y] = "!";
+        if(obs == 0) res[x][y] = "_";
+        else res[x][y] = "X";
+        if(x == 0 && y < (Map.HEIGHT/2)+5 && y > (Map.HEIGHT/2)-5) {
+          res[x][y] = "!";
+        }
+        if(creaturesData[creature.id].map[x][y] > 0) {
+          res[x][y] = "0";
         }
         if(Math.round(creature.initialX) == x && Math.round(creature.initialY) == y) {
-          map[x][y] = "I";
+          res[x][y] = "I";
         }
-      }
-    }
-    for(step in creaturesData[creature.id].route) {
-      var x = step.x;
-      var y = step.y;
-      if(Math.round(creature.initialX) == x && Math.round(creature.initialY) == y) {
-        map[x][y] = "I";
-      }
-      else {
-        map[x][y] = "O";
       }
     }
     var str = "";
     for(x in 0...Map.WIDTH) {
-      str += map[x].join("") + "\n";
+      str += res[x].join("") + "\n";
     }
     return str;
   }

@@ -73,12 +73,6 @@ class Gene {
       case VALUE(value): return value;
     }
   }
-  public static function evolve(gene1: Gene, gene2: Gene): Gene {
-    var randPercent = Math.round(Math.random() * 100);
-    if (randPercent < 45) return gene2;
-    if (randPercent < 90) return gene1;
-    return randomize();
-  }
   public static function exec(creature: Creature, gene: Gene): Int {
     var gotoIdx = creature.currentGeneIdx + 1;
     switch(gene.type) {
