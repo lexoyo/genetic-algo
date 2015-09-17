@@ -6,13 +6,15 @@ enum GeneType {
   TOP;
   BOTTOM;
   GOTO(value:Int);
-  GT(property:WorldProperty, value:Int);
-  LT(property:WorldProperty, value:Int);
+  GT(property1:WorldProperty, property2:WorldProperty);
+  LT(property1:WorldProperty, property2:WorldProperty);
 }
 
 enum WorldProperty {
   ME(property:CreatureProperties);
   MAP(x:Int, y:Int);
+  MAP_REL(x:Int, y:Int);
+  VALUE(value:Int);
 }
 
 enum CreatureProperties {
@@ -39,16 +41,21 @@ class Gene {
       case 4:
         gene.type = GOTO(Math.floor(Math.random() * Creature.NUM_GENES));
       case 5:
-        gene.type = GT(gene.getRandomProp(), Math.round(Math.random() * 100000));
+        gene.type = GT(gene.getRandomProp(), gene.getRandomProp());
       case 6:
-        gene.type = GT(gene.getRandomProp(), Math.round(Math.random() * 100000));
+        gene.type = GT(gene.getRandomProp(), gene.getRandomProp());
     }
     return gene;
   }
   public function getRandomProp() {
     var randPercent = Math.round(Math.random() * 100);
-    if (randPercent < 25) return ME(X);
-    if (randPercent < 50) return ME(Y);
+    if(randPercent < 10) return ME(X);
+    if(randPercent < 20) return ME(Y);
+    if(randPercent < 30) return VALUE(Math.round(Math.random() * 100000));
+    if(randPercent < 40) return MAP_REL(
+      Math.floor(Math.random() * Map.WIDTH - Map.WIDTH / 2),
+      Math.floor(Math.random() * Map.HEIGHT - Map.HEIGHT / 2)
+    );
     return MAP(
       Math.floor(Math.random() * Map.WIDTH),
       Math.floor(Math.random() * Map.HEIGHT)
@@ -62,6 +69,8 @@ class Gene {
           case Y: return Math.round(creature.y);
         }
       case MAP(x, y): return Map.getObstruction(x, y);
+      case MAP_REL(x, y): return Map.getObstruction(Math.round(creature.x) + x, Math.round(creature.y) + y);
+      case VALUE(value): return value;
     }
   }
   public static function evolve(gene1: Gene, gene2: Gene): Gene {
@@ -73,13 +82,13 @@ class Gene {
   public static function exec(creature: Creature, gene: Gene): Int {
     var gotoIdx = creature.currentGeneIdx + 1;
     switch(gene.type) {
-      case LEFT: creature.x--;
-      case RIGHT: creature.x++;
-      case TOP: creature.y++;
-      case BOTTOM: creature.y--;
+      case LEFT: if(Map.getObstruction(Math.round(creature.x-1), Math.round(creature.y)) == 0) creature.x--;
+      case RIGHT: if(Map.getObstruction(Math.round(creature.x+1), Math.round(creature.y)) == 0) creature.x++;
+      case TOP: if(Map.getObstruction(Math.round(creature.x), Math.round(creature.y+1)) == 0) creature.y++;
+      case BOTTOM: if(Map.getObstruction(Math.round(creature.x), Math.round(creature.y-1)) == 0) creature.y--;
       case GOTO(value): gotoIdx = value;
-      case GT(property, value): if(gene.getValueOf(creature, property) <= value) gotoIdx++;
-      case LT(property, value): if(gene.getValueOf(property) >= value) gotoIdx++;
+      case GT(property1, property2): if(gene.getValueOf(creature, property1) <= gene.getValueOf(creature, property2)) gotoIdx++;
+      case LT(property1, property2): if(gene.getValueOf(creature, property1) >= gene.getValueOf(creature, property2)) gotoIdx++;
     }
     return gotoIdx;
   }

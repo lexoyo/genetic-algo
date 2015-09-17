@@ -2,6 +2,8 @@ class Test {
   private static inline var NUM_CREATURES:Int = 1000;
   private static inline var NUM_GENERATIONS:Int = 1000;
   private static inline var NUM_WINNERS:Int = 5;
+  private static inline var NUM_ROUNDS:Int = 5;
+
   static function main() {
     var test:Test = new Test();
   }
@@ -15,18 +17,20 @@ class Test {
   }
   function learningStep(creatures: Array<Creature>): Array<Creature> {
     var teacher:Teacher = new Teacher(creatures);
-    teacher.start();
-
-    while(!teacher.isOver()) {
-      for(creature in creatures) {
-        // trace("new creature", creature.id, creature.toString());
-        creature.loop();
-        teacher.loop(creature);
+    for(match in 0...NUM_ROUNDS) {
+      teacher.start();
+      while(!teacher.isOver()) {
+        for(creature in creatures) {
+          // trace("new creature", creature.id, creature.toString());
+          creature.loop();
+          // if(creature.id == 50000) trace("-> ", creature.toString(), teacher.getScore(creature));
+          teacher.loop(creature);
+        }
+        teacher.turn();
+        // Sys.sleep(.01);
       }
-      teacher.turn();
-      // Sys.sleep(.01);
+      teacher.stop();
     }
-    teacher.stop();
     // det the winners
     var best:Array<Creature> = new Array();
     // order creatures by score
@@ -34,12 +38,12 @@ class Test {
       return teacher.getScore(creature2) - teacher.getScore(creature1);
     });
     var numWinners = NUM_WINNERS;
+    var sum = 0;
     for(creature in creatures) {
-      cpp.Lib.println(creature.id + " scores " + Std.string(teacher.getScore(creature)) + " points (" + creature.toString() + ")");
-      best.push(creature);
-      if(--numWinners <= 0) {
-        break;
+      if(--numWinners > 0) {
+        best.push(creature);
       }
+      sum += teacher.getScore(creature);
     }
     // make a new population
     var newBatch: Array<Creature> = new Array();
@@ -50,7 +54,9 @@ class Test {
         }
       }
     }
-    trace("new batch", newBatch.length);
+    var creature = best[0];
+    cpp.Lib.print("\033[2JScore: " + Std.string(teacher.getScore(creature) / NUM_ROUNDS) + "\n" + creature.toString() + "\n" + teacher.getRoute(creature));
+    trace(creature.initialX, creature.initialY);
     return newBatch;
   }
 }

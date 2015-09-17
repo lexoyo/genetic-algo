@@ -1,9 +1,11 @@
 class Creature {
-  public static inline var NUM_GENES: Int = 10;
+  public static inline var NUM_GENES: Int = 100;
   private static var nextId = 0;
   private var genome: Array<Gene>;
   public var x: Float;
   public var y: Float;
+  public var initialX: Float;
+  public var initialY: Float;
   public var id: Int;
   public var currentGeneIdx: Int = 0;
 
@@ -23,18 +25,33 @@ class Creature {
   }
   public function new() {
     id = nextId++;
-    x = 100;
-    y = 100;
     genome = new Array();
+    reset();
+  }
+  public function reset() {
+    x = 10 + Math.random() * (Map.WIDTH - 20);
+    y = 10 + Math.random() * (Map.HEIGHT - 20);
+//x = 25; y = 25;
+    initialX = x;
+    initialY = y;
   }
   public function loop() {
     if(currentGeneIdx < NUM_GENES) {
       currentGeneIdx = Gene.exec(this, genome[currentGeneIdx]);
+/*
+      var gene = Gene.randomize();
+      gene.type = BOTTOM;
+      currentGeneIdx = Gene.exec(this, gene);
+*/
     }
   }
   public function toString() {
-    var genes: Array<String> = genome.map(function (gene) {return gene.toString();});
-    return "Creature:: " + id + " (" + Math.round(x) + ", " + Math.round(y) + ") [" + genes.join(", ") + "]";
+    var idx = 0;
+    var genes: Array<String> = genome.map(function (gene) {
+      if(currentGeneIdx == idx++) return "*" + gene.toString() + "*";
+      return gene.toString();
+    });
+    return "Creature:: " + id + " (" + Math.round(x) + ", " + Math.round(y) + ", " + Math.round(initialX) + ", " + Math.round(initialY) + ") [" + genes.join(", ") + "]";
   }
 }
 
