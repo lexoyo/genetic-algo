@@ -9,7 +9,7 @@ typedef CreatureData = {
 }
 typedef Coord<T> = { var x:T; var y:T; }
 class Teacher {
-  public static inline var MAX_TURNS:Int = 200;
+  public static inline var MAX_TURNS:Int = 400;
   private var turns:Int = 0;
   private var creaturesData:Array<CreatureData> = null;
 
@@ -60,7 +60,7 @@ class Teacher {
     }
     // gone to a new coord
     if(creaturesData[creature.id].map[Math.round(creature.x)][Math.round(creature.y)] == 0) {
-      creaturesData[creature.id].score += 0;
+      creaturesData[creature.id].score += 1;
     }
     creaturesData[creature.id].map[Math.round(creature.x)][Math.round(creature.y)]++;
     // gone out of the "known" perimeter
@@ -88,16 +88,20 @@ class Teacher {
       res[x] = new Array();
       for(y in 0...Map.HEIGHT) {
         var obs  = Map.getObstruction(x, y);
-        if(obs == 0) res[x][y] = "_";
-        else res[x][y] = "X";
+        if(obs == 0) res[x][y] = "___";
+        else res[x][y] = " X ";
         if(x == 0 && y < (Map.HEIGHT/2)+5 && y > (Map.HEIGHT/2)-5) {
-          res[x][y] = "!";
+          res[x][y] = "!!!";
         }
-        if(creaturesData[creature.id].map[x][y] > 0) {
-          res[x][y] = "0";
+        var num = creaturesData[creature.id].map[x][y];
+        if(num > 0) {
+          var numStr = Std.string(num);
+          if(numStr.length == 1) numStr = " " + numStr + " ";
+          else if(numStr.length == 2) numStr = numStr + " ";
+          res[x][y] = numStr;
         }
         if(Math.round(creature.initialX) == x && Math.round(creature.initialY) == y) {
-          res[x][y] = "I";
+          res[x][y] = "III";
         }
       }
     }
