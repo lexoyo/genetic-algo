@@ -1,7 +1,7 @@
 class Test {
-  private static inline var NUM_CREATURES:Int = 1000;
-  private static inline var NUM_GENERATIONS:Int = 1000;
-  private static inline var NUM_WINNERS:Int = 5;
+  private static inline var NUM_CREATURES:Int = 500;
+  private static inline var NUM_GENERATIONS:Int = 10000;
+  private static inline var NUM_WINNERS:Int = 10;
   private static inline var NUM_ROUNDS:Int = 5;
 
   static function main() {
@@ -25,6 +25,9 @@ class Test {
           creature.loop();
           // if(creature.id == 50000) trace("-> ", creature.toString(), teacher.getScore(creature));
           teacher.loop(creature);
+
+          //if(Teacher.MAX_TURNS == teacher.turns + 1)
+          //  cpp.Lib.print(teacher.getRoute(creature));
         }
         teacher.turn();
         // Sys.sleep(.01);
@@ -56,7 +59,7 @@ class Test {
       }
     }
     var creature = best[0];
-    cpp.Lib.print("\033[2JScore: " + Std.string(teacher.getScore(creature)) + "\n" + creature.toString() + "\n" + teacher.getRoute(creature));
+    cpp.Lib.print("\033[2J\n\n=====================================================================================================================================================================\nBest Score: " + Std.string(teacher.getScore(creature)) + "\n" + creature.toString() + "\n" + teacher.getRoute(creature));
     return newBatch;
   }
 }

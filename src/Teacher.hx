@@ -9,8 +9,8 @@ typedef CreatureData = {
 }
 typedef Coord<T> = { var x:T; var y:T; }
 class Teacher {
-  public static inline var MAX_TURNS:Int = 400;
-  private var turns:Int = 0;
+  public static inline var MAX_TURNS:Int = 200;
+  public var turns:Int = 0;
   private var creaturesData:Array<CreatureData> = null;
 
   public function new(creatures: Array<Creature>) {
@@ -66,7 +66,7 @@ class Teacher {
     // gone out of the "known" perimeter
     if(creaturesData[creature.id].minX > creature.x || creaturesData[creature.id].maxX < creature.x ||
         creaturesData[creature.id].minY > creature.y || creaturesData[creature.id].maxY < creature.y) {
-      creaturesData[creature.id].score += 10;
+      creaturesData[creature.id].score += 0;
     }
     creaturesData[creature.id].minX = Math.min(creature.x, creaturesData[creature.id].minX);
     creaturesData[creature.id].minY = Math.min(creature.y, creaturesData[creature.id].minY);
