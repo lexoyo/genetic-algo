@@ -1,6 +1,6 @@
 class Test {
   private static inline var NUM_CREATURES:Int = 500;
-  private static inline var NUM_GENERATIONS:Int = 10000;
+  private static inline var NUM_GENERATIONS:Int = 10;
   private static inline var NUM_WINNERS:Int = 10;
   private static inline var NUM_ROUNDS:Int = 5;
 
@@ -16,6 +16,7 @@ class Test {
     }
   }
   function learningStep(creatures: Array<Creature>): Array<Creature> {
+    var network = new neuralnet.Network ( new Array(), new Array() );
     var teacher:Teacher = new Teacher(creatures);
     for(match in 0...NUM_ROUNDS) {
       teacher.start();
