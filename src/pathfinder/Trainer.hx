@@ -5,9 +5,11 @@ import pathfinder.Game;
 class Trainer {
   // constants for learning algorithm
   private static inline var NUM_GENERATIONS = 10000;
-  private static inline var NUM_CREATURES = 10000;
   private static inline var NUM_TURNS = 10000;
   // constants for genetic algorithm
+  private static inline var NUM_WINNERS = 100;
+  private static inline var NUM_RANDOM_WINNERS = 10;
+  private static inline var MUTATION_PERCENT = 5;
   // and for neural network
   private static inline var NUM_INPUTS = (Map.SIZE_X * Map.SIZE_Y) + 2 + 2;
   private static inline var NUM_OUTPUTS = 4;
@@ -20,26 +22,27 @@ class Trainer {
     var numChromosomes = NUM_LAYERS;
     var genotypeStructure = getGenotypeStructure();
     // create a 1st random generation with these genes
-    var generation = Generation.createRandom( NUM_CREATURES, genotypeStructure );
+    var generation = genetic.Generation.createRandom( NUM_WINNERS * NUM_WINNERS, genotypeStructure );
     // now start the learning process
     for(generationIdx in 0...NUM_GENERATIONS) {
       trace("Start with generation: $generation");
-      var door = new Object( 5, 0, 10, 1 );
-      var walls = [ new Object( 2, 3, 15, 1 ) ];
+      var door = new Object( 5, 0, 10, 1, Object.DOOR_TYPE );
+      var walls = [ new Object( 2, 3, 15, 1, Object.WALL_TYPE ) ];
       for(creature in generation.creatures) {
-        var network = createNetwork ( creature.chromosomes, genotypeStructure );
-        var player = new Object( 10, 10, 1, 1 );
+        var chromosomesArray : Array<Array<Float>> = [ for (chromosome in creature.chromosomes) [ for (gene in chromosome.genes) gene ]];
+        var network = createNetwork ( chromosomesArray, genotypeStructure );
+        var player = new Object( 10, 10, 1, 1, Object.PLAYER_TYPE );
         var game = new Game(walls.concat([door, player]));
         var turn = 0;
         while(!game.isOver && turn++ < NUM_TURNS) {
-          var input = getNetworkInput( player, door, game.serializeMap(), Map.SIZE_X, Map.SIZE_Y );
+          var input = getNetworkInput( player, door, game.map.objects, Map.SIZE_X, Map.SIZE_Y );
           var output = network.compute( input );
           player.action = getActionFromOutput( output );
           game.nextTurn();
         }
-        creature.score = game.getScore( player );
+        creature.score = player.score;
       }
-      generation = generation.evolve();
+      generation = generation.evolve(NUM_WINNERS, NUM_RANDOM_WINNERS, MUTATION_PERCENT);
     }
   }
 
@@ -52,25 +55,28 @@ class Trainer {
    * the number of weights = numInputs * numNeurons
    * the number of biases = numNeurons
    */
-  private function getGenotypeStructure() : Array<{ numInputs:Int, numNeurons:Int }> {
+  private function getGenotypeStructure() : Array<{ numInputs:Int, numNeurons:Int, numGenes:Int }> {
     return [{
       // first chromosome has the genes for the input weights and the first layer's bias
       numInputs:  NUM_INPUTS,
       numNeurons:  NUM_NEURONS,
+      numGenes: NUM_INPUTS * NUM_NEURONS + NUM_NEURONS,
     }].concat([
       // then each hidden...
       for( i in 1...NUM_LAYERS ) {
         // ... has the inputs from preceding layer x number of layers + bias of each neuron
         {
           numInputs: NUM_NEURONS,
-          numNeurons: NUM_NEURONS
+          numNeurons: NUM_NEURONS,
+          numGenes: NUM_NEURONS * NUM_NEURONS + NUM_NEURONS,
         }
       }
     ])
     .concat([{
       // and finally the last chromosome number of genes is the input of the preceding layer x number of neurons in the output layer + the bias of each output neuron
       numInputs: NUM_NEURONS,
-      numNeurons: NUM_OUTPUTS
+      numNeurons: NUM_OUTPUTS,
+      numGenes: NUM_NEURONS * NUM_OUTPUTS + NUM_OUTPUTS,
     }]);
   }
 
@@ -104,7 +110,7 @@ class Trainer {
    * serializes the map with other useful info for the neural network
    * all elements have a value between 0 and 1
    */
-  private function getNetworkInput( player : Object, door : Object, map : Array<Null<Object>>, mapWidth : Int, mapHeight : Int ) : Array<Float> {
+  private function getNetworkInput( player : Object, door : Object, map : Array<Array<Null<Object>>>, mapWidth : Int, mapHeight : Int ) : Array<Float> {
     return [
       player.x / mapWidth,
       player.y / mapHeight,
@@ -113,8 +119,8 @@ class Trainer {
       door.x / mapWidth,
       door.y / mapHeight,
       door.width / mapWidth,
-      door.height / mapHeight
-    ].concat( map.map( function(object) { return object.getTypeAsFloat(); } ));
+      door.height / mapHeight,
+    ].concat( [ for(line in map) { for (object in line) object.type; }] );
   }
 
 

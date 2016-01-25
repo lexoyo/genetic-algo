@@ -3,7 +3,7 @@ package pathfinder;
 class Map {
   public static inline var SIZE_X = 20;
   public static inline var SIZE_Y = 20;
-  private var objects : Array<Array<Object>>;
+  public var objects : Array<Array<Null<Object>>>;
   public function new() {
     objects = [ for (x in 0...SIZE_X) [ for (y in 0...SIZE_Y ) null ]];
   }

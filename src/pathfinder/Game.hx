@@ -9,8 +9,11 @@ enum Action {
 }
 
 class Game {
+  public var isOver = false;
   private var objects : Array<Object>;
-  private var map : Map;
+  public var map : Map;
+  private var numIdleTurns : Int = 0;
+  private static inline var NUM_IDLE_TO_END : Int = 10;
   public function new ( objects : Array<Object> ) {
     this.objects = objects;
     map = new Map();
@@ -22,7 +25,11 @@ class Game {
    * move objects, handle collisions, display the map
    */
   public function nextTurn () {
+    var atLeastOneMove = false;
     for ( object in objects ) {
+      if( object.action != NONE ) {
+        atLeastOneMove = true;
+      }
       // compute object movement
       var offset = switch ( object.action ) {
         case UP:
@@ -56,7 +63,18 @@ class Game {
         map.set( object.x, object.y, object );
       }
     }
+    if (atLeastOneMove) {
+      numIdleTurns = 0;
+    }
+    else {
+      numIdleTurns++;
+      if (numIdleTurns >= NUM_IDLE_TO_END) {
+        isOver = true;
+      }
+    }
   }
+
+
   /**
    * called upon collision
    */
