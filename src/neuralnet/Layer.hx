@@ -1,5 +1,8 @@
 package neuralnet;
 
+/**
+ * Handle the creation of layers of neurons, with random weights and biases. Also computes an output for a given input.
+ */
 class Layer {
   public var neurons : Array<Neuron>;
   public function new ( weights : Array<Array<Float>>, biases : Array<Float> ) {

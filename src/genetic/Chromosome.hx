@@ -1,31 +1,14 @@
 import haxe.EnumTools;
 
-enum GeneType {
-  LEFT;
-  RIGHT;
-  TOP;
-  BOTTOM;
-  GOTO(value:Int);
-  GT(property1:WorldProperty, property2:WorldProperty);
-  LT(property1:WorldProperty, property2:WorldProperty);
+typedef GeneValue<T> = {
+  public static function random () : T;
 }
 
-enum WorldProperty {
-  ME(property:CreatureProperties);
-  MAP(x:Int, y:Int);
-  MAP_REL(x:Int, y:Int);
-  VALUE(value:Int);
-}
-
-enum CreatureProperties {
-  X;
-  Y;
-}
-
-class Gene {
-  public static inline var NUM_GENE_TYPES:Int = 7;
-  public var type: GeneType;
-  public function new() {}
+class Chromosome<GeneValue<T>> {
+  private genes : Array<GeneValues<T>>;
+  public function new( genes : Array<GeneValue<T>> ) {
+    this.genes = genes;
+  }
   public static function randomize(): Gene {
     var gene = new Gene();
     var randIdx = Math.floor(Math.random() * NUM_GENE_TYPES);

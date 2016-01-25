@@ -1,5 +1,8 @@
 package neuralnet;
 
+/**
+ * Handle the smallest unit of data. Sums its inputs and apply the bias.
+ */
 class Neuron {
   private var weights : Array<Float>;
   private var bias : Float;

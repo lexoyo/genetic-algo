@@ -1,6 +1,6 @@
 -cpp cpp
 -cp src
 -debug
--main Test
--cmd ./cpp/Test-debug
+-main pathfinder.Trainer
+-cmd ./cpp/Trainer-debug
 
