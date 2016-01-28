@@ -1,6 +1,0 @@
--cpp cpp
--cp src
--debug
--main pathfinder.Trainer
--cmd ./cpp/Trainer-debug
-

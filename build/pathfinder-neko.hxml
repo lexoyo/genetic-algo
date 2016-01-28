@@ -1,0 +1,7 @@
+-neko bin/pathfinder.n
+-cp src
+-debug
+-main pathfinder.Trainer
+-cmd neko ./bin/pathfinder.n
+
+

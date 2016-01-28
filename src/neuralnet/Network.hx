@@ -14,6 +14,7 @@ class Network {
    * @param biases the bias of each neuron of each layer
    */
   public function new ( weights : Array<Array<Array<Float>>>, biases : Array<Array<Float>> ) {
+    if( weights.length != biases.length ) throw 'Weigths and biases arrays are expected to have the same length (${weights.length} ${biases.length})';
     layers = [ for ( i in 0...weights.length ) new Layer( weights[i], biases[i] )];
   }
   public function compute ( input : Array<Float> ) : Array<Float> {

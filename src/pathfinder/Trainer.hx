@@ -4,17 +4,18 @@ import pathfinder.Game;
 
 class Trainer {
   // constants for learning algorithm
-  private static inline var NUM_GENERATIONS = 10000;
-  private static inline var NUM_TURNS = 10000;
+  private static inline var NUM_GENERATIONS = 10;
+  private static inline var NUM_CREATURE_INITIAL = 500;
+  private static inline var NUM_TURNS = 50;
   // constants for genetic algorithm
-  private static inline var NUM_WINNERS = 100;
-  private static inline var NUM_RANDOM_WINNERS = 10;
-  private static inline var MUTATION_PERCENT = 5;
+  private static inline var NUM_WINNERS = 3;
+  private static inline var NUM_RANDOM_WINNERS = 1;
+  private static inline var MUTATION_PERCENT = .001;
   // and for neural network
-  private static inline var NUM_INPUTS = (Map.SIZE_X * Map.SIZE_Y) + 2 + 2;
-  private static inline var NUM_OUTPUTS = 4;
+  private static inline var NUM_INPUTS = (Map.SIZE_X * Map.SIZE_Y) + 4 + 4;
+  private static inline var NUM_OUTPUTS = 5;
   private static inline var NUM_LAYERS = 2;
-  private static inline var NUM_NEURONS = 1000;
+  private static inline var NUM_NEURONS = 10;
   public static function main() {
     new Trainer();
   }
@@ -22,30 +23,50 @@ class Trainer {
     var numChromosomes = NUM_LAYERS;
     var genotypeStructure = getGenotypeStructure();
     // create a 1st random generation with these genes
-    var generation = genetic.Generation.createRandom( NUM_WINNERS * NUM_WINNERS, genotypeStructure );
+    var generation = genetic.Generation.createRandom( NUM_CREATURE_INITIAL, genotypeStructure );
     // now start the learning process
     for(generationIdx in 0...NUM_GENERATIONS) {
-      trace("Start with generation: $generation");
-      var door = new Object( 5, 0, 10, 1, Object.DOOR_TYPE );
-      var walls = [ new Object( 2, 3, 15, 1, Object.WALL_TYPE ) ];
+      trace('Start tournament with $generation');
+      var door = new Object( 5, 0, 8, 1, Object.DOOR_TYPE );
+      var walls = [ new Object( 2, 3, 1, 1, Object.WALL_TYPE ) ];
+      var generationBestScore = 0;
+      var game:Game = null;
       for(creature in generation.creatures) {
         var chromosomesArray : Array<Array<Float>> = [ for (chromosome in creature.chromosomes) [ for (gene in chromosome.genes) gene ]];
         var network = createNetwork ( chromosomesArray, genotypeStructure );
         var player = new Object( 10, 10, 1, 1, Object.PLAYER_TYPE );
-        var game = new Game(walls.concat([door, player]));
+        game = new Game(walls.concat([door, player]));
         var turn = 0;
         while(!game.isOver && turn++ < NUM_TURNS) {
           var input = getNetworkInput( player, door, game.map.objects, Map.SIZE_X, Map.SIZE_Y );
           var output = network.compute( input );
           player.action = getActionFromOutput( output );
+          //if(player.action != NONE) trace("------", output, player.action);
           game.nextTurn();
         }
         creature.score = player.score;
+        if( generationBestScore < player.score ) generationBestScore = player.score;
+        if(player.score > 0)
+          displayMap(game.map.objects);
       }
+      trace('End of tournament with best score $generationBestScore');
       generation = generation.evolve(NUM_WINNERS, NUM_RANDOM_WINNERS, MUTATION_PERCENT);
     }
   }
 
+  function displayMap(map : Array<Array<Null<Object>>>) {
+      for(line in map) {
+        var arr = [];
+        for (object in line)  {
+          if(object == null) arr.push("0");
+          else if (object.type == Object.WALL_TYPE) arr.push("|");
+          else if (object.type == Object.PLAYER_TYPE) arr.push("M");
+          else arr.push("X");
+        }
+        trace(arr);
+      }
+      trace("------");
+  }
 
   /**
    * this methods fills an array to link the chromosomes and the neural network of a creature
@@ -95,13 +116,14 @@ class Trainer {
       weights.push([
           for ( neuronIdx  in 0...chromosomeStructure.numNeurons ) {
             for ( inputIdx  in 0...chromosomeStructure.numInputs ) {
-              chromosomes[ chromosomeIdx ].slice( neuronIdx + inputIdx * chromosomeStructure.numNeurons );
+              chromosomes[ chromosomeIdx ].slice( inputIdx + neuronIdx * chromosomeStructure.numInputs,  inputIdx + neuronIdx * chromosomeStructure.numInputs + chromosomeStructure.numInputs);
             }
           }
       ]);
       biases.push( chromosomes[ chromosomeIdx ].slice( chromosomeStructure.numInputs * chromosomeStructure.numNeurons ));
     }
-    return new neuralnet.Network( weights, biases );
+    var res = new neuralnet.Network( weights, biases );
+    return res;
   }
 
 
@@ -120,7 +142,7 @@ class Trainer {
       door.y / mapHeight,
       door.width / mapWidth,
       door.height / mapHeight,
-    ].concat( [ for(line in map) { for (object in line) object.type; }] );
+    ].concat( [ for(line in map) { for (object in line) if(object == null) Object.WALL_TYPE; else object.type; }] );
   }
 
 

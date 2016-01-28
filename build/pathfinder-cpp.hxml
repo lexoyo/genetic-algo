@@ -1,0 +1,7 @@
+-cpp bin/pathfinder
+-cp src
+-debug
+-main pathfinder.Trainer
+-cmd ./bin/pathfinder/Trainer-debug
+
+

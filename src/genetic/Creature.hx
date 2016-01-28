@@ -6,8 +6,9 @@ class Creature {
   public var chromosomes: Array<Chromosome>;
   public var score:Int;
 
-  public static function procreate(creature1: Creature, creature2: Creature, mutationPercent:Int ): Creature {
+  public static function procreate(creature1: Creature, creature2: Creature, mutationPercent:Float ): Creature {
     var chromosomes:Array<Chromosome> = [];
+    var hasMutated = false;
     // for each chromosome
     for (chromosomeIdx in 0...creature1.chromosomes.length) {
       var genes:Array<Gene> = [];
@@ -21,9 +22,10 @@ class Creature {
           genes[geneIdx] = creature2.chromosomes[chromosomeIdx].genes[geneIdx];
         }
         // mutation
-        var randPercent = Math.round(Math.random() * 100);
+        var randPercent = Math.random() * 100;
         if(randPercent < mutationPercent) {
           genes[geneIdx] = Math.random();
+          hasMutated = true;
         }
       }
       chromosomes[chromosomeIdx] = new Chromosome( genes );
@@ -37,7 +39,7 @@ class Creature {
   }
   public function toString() {
     // TODO: give it a name
-    return "[Creature:: ${chromosomes.length} chromosomes, score: $score]";
+    return '[Creature:: ${chromosomes.length} chromosomes, score: $score]';
   }
 }
 

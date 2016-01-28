@@ -14,11 +14,14 @@ class Neuron {
    * compute the output value for the given input values
    */
   public function compute ( input : Array<Float> ) : Float {
-    if ( input.length != weights.length ) throw "Could not compute output for the neuron since number of inputs differs from number of weights";
-    var result : Float = 0;
+    if ( input.length != weights.length ) throw 'Could not compute output for the neuron since number of inputs differs from number of weights (${input.length} ${weights.length})';
+    var prod : Float = 0;
+    var sum : Float = 0;
     for ( i in 0...input.length) {
-      result += input[i] * weights[i];
+      prod += input[i] * weights[i];
+      sum += input[i] + weights[i];
     }
+    var result = prod / sum;
     return if( result >= bias ) result;
     else 0;
   }
