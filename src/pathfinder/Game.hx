@@ -90,7 +90,6 @@ class Game {
     object1.collide( object2 );
     object2.collide( object1 );
     if ( object1.type == Object.DOOR_TYPE || object2.type == Object.DOOR_TYPE )
-      trace('============> DOOR FOUND $object1 $object2');
       isOver = true;
   }
 }

@@ -4,13 +4,14 @@ import pathfinder.Game;
 
 class Trainer {
   // constants for learning algorithm
-  private static inline var NUM_GENERATIONS = 10;
-  private static inline var NUM_CREATURE_INITIAL = 500;
+  private static inline var NUM_GENERATIONS = 100;
+  private static inline var NUM_MATCH = 2;
+  private static inline var NUM_CREATURE = 1000;
   private static inline var NUM_TURNS = 50;
   // constants for genetic algorithm
-  private static inline var NUM_WINNERS = 3;
-  private static inline var NUM_RANDOM_WINNERS = 1;
-  private static inline var MUTATION_PERCENT = .001;
+  private static inline var NUM_WINNERS = 40;
+  private static inline var NUM_RANDOM_WINNERS = 10;
+  private static inline var MUTATION_PERCENT = .1; // the less the score the heigher the mutation rate, see Generation::evolve
   // and for neural network
   private static inline var NUM_INPUTS = (Map.SIZE_X * Map.SIZE_Y) + 4 + 4;
   private static inline var NUM_OUTPUTS = 5;
@@ -23,38 +24,46 @@ class Trainer {
     var numChromosomes = NUM_LAYERS;
     var genotypeStructure = getGenotypeStructure();
     // create a 1st random generation with these genes
-    var generation = genetic.Generation.createRandom( NUM_CREATURE_INITIAL, genotypeStructure );
+    var generation = genetic.Generation.createRandom( NUM_CREATURE, genotypeStructure );
     // now start the learning process
     for(generationIdx in 0...NUM_GENERATIONS) {
       trace('Start tournament with $generation');
-      var door = new Object( 5, 0, 8, 1, Object.DOOR_TYPE );
-      var walls = [ new Object( 2, 3, 1, 1, Object.WALL_TYPE ) ];
       var generationBestScore = 0;
-      var game:Game = null;
-      for(creature in generation.creatures) {
-        var chromosomesArray : Array<Array<Float>> = [ for (chromosome in creature.chromosomes) [ for (gene in chromosome.genes) gene ]];
-        var network = createNetwork ( chromosomesArray, genotypeStructure );
-        var player = new Object( 10, 10, 1, 1, Object.PLAYER_TYPE );
-        game = new Game(walls.concat([door, player]));
-        var turn = 0;
-        while(!game.isOver && turn++ < NUM_TURNS) {
-          var input = getNetworkInput( player, door, game.map.objects, Map.SIZE_X, Map.SIZE_Y );
-          var output = network.compute( input );
-          player.action = getActionFromOutput( output );
-          //if(player.action != NONE) trace("------", output, player.action);
-          game.nextTurn();
+      var numWinners = 0;
+      for(matchIdx in 0...NUM_MATCH) {
+        var door = new Object( Math.floor(Math.random() * 10), 0, 8, 1, Object.DOOR_TYPE );
+        var walls = [ new Object( 2, 3, Math.floor(Math.random() * 10), 1, Object.WALL_TYPE ) ];
+        var game:Game = null;
+        for(creature in generation.creatures) {
+          var chromosomesArray : Array<Array<Float>> = [ for (chromosome in creature.chromosomes) [ for (gene in chromosome.genes) gene ]];
+          var network = createNetwork ( chromosomesArray, genotypeStructure );
+          var player = new Object( 10, 10, 1, 1, Object.PLAYER_TYPE );
+          game = new Game(walls.concat([door, player]));
+          var turn = 0;
+          while(!game.isOver && turn++ < NUM_TURNS) {
+            var input = getNetworkInput( player, door, game.map.objects, Map.SIZE_X, Map.SIZE_Y );
+            var output = network.compute( input );
+            player.action = getActionFromOutput( output );
+            //if(player.action != NONE) trace("------", output, player.action);
+            game.nextTurn();
+          }
+          creature.score += player.score;
+          if ( creature.score > 0 ) numWinners++;
+          if( generationBestScore < creature.score ) generationBestScore = creature.score;
+          // if(creature.score > 0)
+          // displayMap(game.map.objects);
+          // trace('$creature');
         }
-        creature.score = player.score;
-        if( generationBestScore < player.score ) generationBestScore = player.score;
-        if(player.score > 0)
-          displayMap(game.map.objects);
+        displayMap(game.map.objects);
       }
-      trace('End of tournament with best score $generationBestScore');
+      trace('End of tournament with best score $generationBestScore and $numWinners winners.');
       generation = generation.evolve(NUM_WINNERS, NUM_RANDOM_WINNERS, MUTATION_PERCENT);
     }
   }
 
   function displayMap(map : Array<Array<Null<Object>>>) {
+    Sys.print('\033[2J');
+    trace("------");
       for(line in map) {
         var arr = [];
         for (object in line)  {

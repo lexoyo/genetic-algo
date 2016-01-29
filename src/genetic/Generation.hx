@@ -28,7 +28,9 @@ class Generation {
     while( children.length < creatures.length )
       for(idx1 in 0...winners.length) {
         for(idx2 in idx1...winners.length) { // even with himself, i.e. clone (idx1== idx2)
-          children.push( Creature.procreate( winners[idx1], winners[idx2], mutationPercent ));
+          // the less the score the heigher the mutation rate
+          var mutationRate = ( winners[idx1].score + winners[idx2].score );
+          children.push( Creature.procreate( winners[idx1], winners[idx2], mutationPercent / mutationRate ));
       }
     }
     return new Generation( children );
